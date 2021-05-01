@@ -1,29 +1,53 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./App.module.css";
 import SearchHeader from "./components/search_header/SearchHeader";
+import VideoDetail from "./components/video_detail/VideoDetail";
 import VideoList from "./components/video_list/VideoList";
-
-// AIzaSyAfOHHOLM4CajlC9_niLFzkZcp1NpNuaBM
 
 function App({ youtube }) {
   const [videos, setVideos] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
-  const search = (query) => {
-    youtube
-      .search(query) //
-      .then((videos) => setVideos(videos));
+  const selectVideo = (video) => {
+    setSelectedVideo(video);
   };
+
+  const search = useCallback(
+    (query) => {
+      youtube
+        .search(query) //
+        .then((videos) => {
+          setVideos(videos);
+          setSelectedVideo(null);
+        });
+    },
+    [youtube]
+  );
 
   useEffect(() => {
     youtube
       .mostPopular() //
       .then((videos) => setVideos(videos));
-  }, []);
+  }, [youtube]);
 
   return (
     <div className={styles.app}>
       <SearchHeader onSearch={search} />
-      <VideoList videos={videos} />;
+      <section className={styles.content}>
+        {selectedVideo && (
+          <div className={styles.detail}>
+            <VideoDetail video={selectedVideo} />
+          </div>
+        )}
+        <div className={styles.list}>
+          <VideoList
+            videos={videos}
+            onVideoClick={selectVideo}
+            display={selectedVideo ? "list" : "grid"}
+          />
+          ;
+        </div>
+      </section>
     </div>
   );
 }
